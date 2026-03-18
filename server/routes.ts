@@ -17,8 +17,10 @@ import {
 } from "./auth";
 import { ZodError } from "zod";
 import financeRoutes from "./routes/finance.routes";
+import branchesRoutes from "./routes/branches.routes";
+import inventoryRoutes from "./routes/inventory.routes";
 
-function respondZodError(res: any, error: unknown) {
+export function respondZodError(res: any, error: unknown) {
   if (error instanceof ZodError) {
     return res.status(400).json({
       message: "Invalid request data",
@@ -437,50 +439,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Finance (Refactored to Clean Architecture)
   app.use("/api/finance", financeRoutes);
 
-  // Branches routes
-  app.get("/api/branches", authenticateAccess, async (req: any, res) => {
-    const branches = await storage.getBranches(req.user.tenantId);
-    res.json(branches);
-  });
-
-  app.post("/api/branches", authenticateAccess, async (req: any, res) => {
-    try {
-      const data = insertBranchSchema.parse(req.body);
-      const branch = await storage.createBranch(req.user.tenantId, data);
-      res.status(201).json(branch);
-    } catch (error) {
-      return respondZodError(res, error);
-    }
-  });
-
-  app.get("/api/branches/:id", authenticateAccess, async (req: any, res) => {
-    const branch = await storage.getBranch(req.params.id, req.user.tenantId);
-    if (!branch) {
-      return res.status(404).json({ message: "Branch not found" });
-    }
-    res.json(branch);
-  });
-
-  app.put("/api/branches/:id", authenticateAccess, async (req: any, res) => {
-    try {
-      const data = insertBranchSchema.partial().parse(req.body);
-      const branch = await storage.updateBranch(req.params.id, req.user.tenantId, data);
-      if (!branch) {
-        return res.status(404).json({ message: "Branch not found" });
-      }
-      res.json(branch);
-    } catch (error) {
-      return respondZodError(res, error);
-    }
-  });
-
-  app.delete("/api/branches/:id", authenticateAccess, async (req: any, res) => {
-    const success = await storage.deleteBranch(req.params.id, req.user.tenantId);
-    if (!success) {
-      return res.status(404).json({ message: "Branch not found" });
-    }
-    res.status(204).send();
-  });
+  // Branches (Refactored to Clean Architecture)
+  app.use("/api/branches", branchesRoutes);
 
   // Clients routes
   app.get("/api/clients", authenticateAccess, async (req: any, res) => {
@@ -714,82 +674,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Inventory routes
-  app.get("/api/inventory", authenticateAccess, async (req: any, res) => {
-    const inventory = await storage.getInventory(req.user.tenantId);
-    res.json(inventory);
-  });
-
-  app.post("/api/inventory", authenticateAccess, async (req: any, res) => {
-    try {
-      if (!req.user || !req.user.tenantId) {
-        return res.status(403).json({ message: "У вас нет доступа к добавлению материалов (отсутствует tenantId)" });
-      }
-      const data = insertInventorySchema.parse(req.body);
-
-      // Ensure category is passed efficiently
-      const item = await storage.createInventoryItem(req.user.tenantId, data);
-      res.status(201).json(item);
-    } catch (error) {
-      console.error("POST /api/inventory error:", error);
-      return respondZodError(res, error);
-    }
-  });
-
-  app.get("/api/inventory/:id", authenticateAccess, async (req: any, res) => {
-    const item = await storage.getInventoryItem(req.params.id, req.user.tenantId);
-    if (!item) {
-      return res.status(404).json({ message: "Inventory item not found" });
-    }
-    res.json(item);
-  });
-
-  app.put("/api/inventory/:id", authenticateAccess, async (req: any, res) => {
-    try {
-      const data = insertInventorySchema.partial().parse(req.body);
-      const item = await storage.updateInventoryItem(req.params.id, req.user.tenantId, data);
-      if (!item) {
-        return res.status(404).json({ message: "Inventory item not found" });
-      }
-      res.json(item);
-    } catch (error) {
-      return respondZodError(res, error);
-    }
-  });
-
-  app.delete("/api/inventory/:id", authenticateAccess, async (req: any, res) => {
-    const success = await storage.deleteInventoryItem(req.params.id, req.user.tenantId);
-    if (!success) {
-      return res.status(404).json({ message: "Inventory item not found" });
-    }
-    res.status(204).send();
-  });
-
-  // Inventory Excel Export
-  app.get("/api/inventory/export", authenticateAccess, async (req: any, res) => {
-    try {
-      const inventory = await storage.getInventory(req.user.tenantId);
-      const branches = await storage.getBranches(req.user.tenantId);
-      const data = inventory.map(item => ({
-        "Название": item.name,
-        "Категория": item.category || "general",
-        "Количество": item.quantity,
-        "Мин. остаток": item.minQuantity,
-        "Ед. изм.": item.unit,
-        "Филиал": branches.find(b => b.id === item.branchId)?.name || "Общий склад",
-      }));
-      const ws = xlsx.utils.json_to_sheet(data);
-      const wb = xlsx.utils.book_new();
-      xlsx.utils.book_append_sheet(wb, ws, "Склад");
-      const buffer = xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
-
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', 'attachment; filename="inventory.xlsx"');
-      res.send(buffer);
-    } catch (e) {
-      res.status(500).json({ message: "Export failed" });
-    }
-  });
+  // Inventory (Refactored to Clean Architecture)
+  app.use("/api/inventory", inventoryRoutes);
 
   const httpServer = createServer(app);
   return httpServer;
