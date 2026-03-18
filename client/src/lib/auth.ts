@@ -23,7 +23,9 @@ let refreshInFlight: Promise<string> | null = null;
 async function doRefresh(): Promise<string> {
   const r = await fetch("/api/auth/refresh", { method: "POST", credentials: "include" });
   if (!r.ok) throw new Error("Unable to refresh session");
-  const { token, expiresIn } = (await r.json()) as { token: string; expiresIn?: number };
+  const data = await r.json();
+  if (!data.token) throw new Error("No active session");
+  const { token, expiresIn } = data as { token: string; expiresIn?: number };
   localStorage.setItem(TOKEN_KEY, token);
   if (expiresIn) {
     const exp = Math.floor(Date.now() / 1000) + expiresIn;
