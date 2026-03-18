@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertClientSchema, type Client, type InsertClient } from "@shared/schema";
-import { Plus, Search, Eye, Download, Upload } from "lucide-react";
+import { Plus, Search, Eye, Download, Upload, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import * as xlsx from "xlsx";
@@ -311,8 +311,22 @@ export default function Clients() {
               <TableBody>
                 {filteredClients.length === 0 ? (
                   <TableRow data-testid="no-clients-row">
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      {searchTerm ? t("not_found") : t("no_clients")}
+                    <TableCell colSpan={6} className="text-center py-16">
+                      {searchTerm ? (
+                        <div className="flex flex-col items-center justify-center space-y-3 text-muted-foreground">
+                          <Search className="h-12 w-12 opacity-50" />
+                          <p>{t("not_found")}</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center space-y-4">
+                          <Users className="h-16 w-16 text-gray-300" />
+                          <h3 className="text-lg font-medium text-foreground">В вашей базе пока нет клиентов</h3>
+                          <Button onClick={() => setIsAddDialogOpen(true)} className="mt-2">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Добавить первого клиента
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ) : (

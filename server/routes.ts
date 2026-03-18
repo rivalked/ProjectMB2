@@ -16,6 +16,7 @@ import {
   getAccessTokenTtlSeconds,
 } from "./auth";
 import { ZodError } from "zod";
+import financeRoutes from "./routes/finance.routes";
 
 function respondZodError(res: any, error: unknown) {
   if (error instanceof ZodError) {
@@ -433,70 +434,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Finance
-  app.get("/api/finance/p-and-l", authenticateAccess, async (req: any, res) => {
-    try {
-      const tenantId = req.user.tenantId;
-
-      const payments = await storage.getPayments(tenantId);
-      const expenses = await storage.getExpenses(tenantId);
-      const appointments = await storage.getAppointments(tenantId);
-      const employees = await storage.getEmployees(tenantId);
-      const services = await storage.getServices(tenantId);
-
-      // Gross Revenue: Sum of completed payments
-      const grossRevenue = payments
-        .filter((p) => p.status === "completed")
-        .reduce((sum, p) => sum + parseFloat(p.amount), 0);
-
-      // Payroll calculation
-      let payroll = 0;
-      const completedAppointments = appointments.filter((a) => a.status === "completed");
-      completedAppointments.forEach((apt) => {
-        const emp = employees.find((e) => e.id === apt.employeeId);
-        const svc = services.find((s) => s.id === apt.serviceId);
-        if (emp && svc && svc.price) {
-          const aptPrice = parseFloat(svc.price);
-          const salaryRate = parseFloat(emp.salaryRate as any || "0");
-          if (emp.salaryType === "percentage") {
-            payroll += aptPrice * (salaryRate / 100);
-          } else if (emp.salaryType === "fixed") {
-            // Very simplified fixed calc - per appointment? Normally fixed is per month, but for simplicity:
-            payroll += salaryRate;
-          } else if (emp.salaryType === "hybrid") {
-            payroll += aptPrice * (salaryRate / 100); // simplify hybrid as well just percentage here
-          }
-        }
-      });
-
-      // OPEX
-      const opex = expenses.reduce((sum, e) => sum + parseFloat(e.amount as any || "0"), 0);
-
-      // COGS - Very simplified: if we had inventory_used, we'd use that.
-      // For now, let's just use costPrice of services performed + 0.
-      let cogs = 0;
-      completedAppointments.forEach((apt) => {
-        const svc = services.find((s) => s.id === apt.serviceId);
-        if (svc) {
-          cogs += parseFloat(svc.costPrice as any || "0");
-        }
-      });
-
-      const netProfit = grossRevenue - cogs - payroll - opex;
-
-      res.json({
-        grossRevenue,
-        cogs,
-        payroll,
-        opex,
-        netProfit,
-        currency: "UZS" // enforcing strict UZS currency rules
-      });
-    } catch (error: any) {
-      console.error("Error calculating P&L:", error);
-      res.status(500).json({ message: "Internal Server Error" });
-    }
-  });
+  // Finance (Refactored to Clean Architecture)
+  app.use("/api/finance", financeRoutes);
 
   // Branches routes
   app.get("/api/branches", authenticateAccess, async (req: any, res) => {

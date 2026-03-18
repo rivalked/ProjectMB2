@@ -3,6 +3,7 @@ dist/
 .DS_Store
 .env
 server/public/
+.playwright-mcp/
 
 # Временные файлы Vite и логи
 vite.config.ts.*
