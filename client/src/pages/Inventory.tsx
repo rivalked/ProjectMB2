@@ -316,11 +316,13 @@ export default function Inventory() {
                 {t("add_material")}
               </Button>
             </DialogTrigger>
-            <DialogContent data-testid="dialog-add-inventory" aria-describedby="add-inventory-desc">
+            <DialogContent data-testid="dialog-add-inventory">
               <DialogHeader>
                 <DialogTitle>{t("add_new_material")}</DialogTitle>
+                <DialogDescription className="sr-only">
+                  {t("add_new_material")}
+                </DialogDescription>
               </DialogHeader>
-              <p id="add-inventory-desc" className="text-sm text-muted-foreground">{t("add_new_material")}</p>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
@@ -493,9 +495,11 @@ export default function Inventory() {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Импорт материалов (Smart Mapper)</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Мы нашли {importData.length} строк в файле. Сопоставьте колонки из вашего файла с полями нашей базы.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">Мы нашли {importData.length} строк в файле. Сопоставьте колонки из вашего файла с полями нашей базы.</p>
 
               <div className="grid grid-cols-2 gap-4 border-b pb-2 font-medium">
                 <div>Поле в CRM</div>
@@ -667,10 +671,10 @@ export default function Inventory() {
               <div className="flex gap-2 w-full md:w-auto">
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Все категории" />
+                    <SelectValue placeholder={t("all_categories")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Все категории</SelectItem>
+                    <SelectItem value="all">{t("all_categories")}</SelectItem>
                     {categoryOptions.map((cat) => (
                       <SelectItem key={cat} value={cat}>
                         {cat}

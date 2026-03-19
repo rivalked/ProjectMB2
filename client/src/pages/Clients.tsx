@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
@@ -217,11 +217,13 @@ export default function Clients() {
                 {t("add_client")}
               </Button>
             </DialogTrigger>
-            <DialogContent data-testid="dialog-add-client" aria-describedby="add-client-desc">
+            <DialogContent data-testid="dialog-add-client">
               <DialogHeader>
                 <DialogTitle>{t("add_client")}</DialogTitle>
+                <DialogDescription className="sr-only">
+                  Заполните данные клиента. Поля имя и телефон обязательны.
+                </DialogDescription>
               </DialogHeader>
-              <p id="add-client-desc" className="text-sm text-muted-foreground">Заполните данные клиента. Поля имя и телефон обязательны.</p>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
@@ -385,9 +387,11 @@ export default function Clients() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Импорт клиентов (Smart Mapper)</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Мы нашли {importData.length} строк в файле. Сопоставьте колонки из вашего файла с полями нашей базы.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Мы нашли {importData.length} строк в файле. Сопоставьте колонки из вашего файла с полями нашей базы.</p>
 
             <div className="grid grid-cols-2 gap-4 border-b pb-2 font-medium">
               <div>Поле в CRM</div>

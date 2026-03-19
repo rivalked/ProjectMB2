@@ -180,8 +180,8 @@ export const insertAddonSchema = createInsertSchema(addons).omit({
 });
 
 export const insertTenantSchema = createInsertSchema(tenants, {
-  name: z.string().trim().min(1, "name required"),
-  businessType: z.string().trim().min(1, "business type required"),
+  name: z.string().trim().min(1, "Имя обязательно для заполнения"),
+  businessType: z.string().trim().min(1, "Тип бизнеса обязателен"),
   status: z.enum(['active', 'trial', 'blocked']).default('active'),
   telegramBotToken: z.string().optional().nullable(),
   botEnabled: z.boolean().optional().default(false),
@@ -196,8 +196,8 @@ export const insertUserSchema = createInsertSchema(users).omit({
 });
 
 export const insertBranchSchema = createInsertSchema(branches, {
-  name: z.string().trim().min(1, "name required"),
-  address: z.string().trim().min(1, "address required"),
+  name: z.string().trim().min(1, "Название обязательно для заполнения"),
+  address: z.string().trim().min(1, "Адрес обязателен для заполнения"),
   phone: z.string().trim().optional(),
 }).omit({
   id: true,
@@ -206,8 +206,8 @@ export const insertBranchSchema = createInsertSchema(branches, {
 });
 
 export const insertClientSchema = createInsertSchema(clients, {
-  name: z.string().trim().min(1, "name required"),
-  phone: z.string().trim().min(1, "phone required"),
+  name: z.string().trim().min(1, "Имя обязательно для заполнения"),
+  phone: z.string().trim().min(1, "Телефон обязателен для заполнения"),
   email: z.string().email().optional().or(z.literal("")).transform(v => v || undefined),
 }).omit({
   id: true,
@@ -218,11 +218,11 @@ export const insertClientSchema = createInsertSchema(clients, {
 });
 
 export const insertEmployeeSchema = createInsertSchema(employees, {
-  name: z.string().trim().min(1, "name required"),
-  position: z.string().trim().min(1, "position required"),
+  name: z.string().trim().min(1, "Имя обязательно для заполнения"),
+  position: z.string().trim().min(1, "Должность обязательна"),
   phone: z.string().trim().optional(),
   salaryType: z.enum(["fixed", "percentage", "hybrid"]).optional().default("percentage"),
-  salaryRate: z.string().regex(/^\d+(?:\.\d{1,2})?$/, "invalid salary amount").optional().default("0"),
+  salaryRate: z.string().regex(/^\d+(?:\.\d{1,2})?$/, "Неверный формат зарплаты").optional().default("0"),
 }).omit({
   id: true,
   createdAt: true,
@@ -230,12 +230,12 @@ export const insertEmployeeSchema = createInsertSchema(employees, {
 });
 
 export const insertServiceSchema = createInsertSchema(services, {
-  name: z.string().trim().min(1, "name required"),
+  name: z.string().trim().min(1, "Название обязательно для заполнения"),
   description: z.string().trim().optional(),
-  duration: z.number().int().positive("duration must be > 0"),
-  price: z.string().regex(/^\d+(?:\.\d{1,2})?$/, "invalid price"),
-  costPrice: z.string().regex(/^\d+(?:\.\d{1,2})?$/, "invalid cost price").optional().default("0"),
-  category: z.string().trim().min(1, "category required"),
+  duration: z.number().int().positive("Длительность должна быть больше 0"),
+  price: z.string().regex(/^\d+(?:\.\d{1,2})?$/, "Неверный формат цены"),
+  costPrice: z.string().regex(/^\d+(?:\.\d{1,2})?$/, "Неверный формат себестоимости").optional().default("0"),
+  category: z.string().trim().min(1, "Категория обязательна"),
   isActive: z.boolean().optional(),
 }).omit({
   id: true,
@@ -253,7 +253,7 @@ export const insertAppointmentSchema = createInsertSchema(appointments, {
 });
 
 export const insertPaymentSchema = createInsertSchema(payments, {
-  amount: z.string().regex(/^\d+(?:\.\d{1,2})?$/, "invalid amount"),
+  amount: z.string().regex(/^\d+(?:\.\d{1,2})?$/, "Неверный формат суммы"),
   paymentMethod: z.enum(["cash", "card", "online"]).default("card"),
   status: z.enum(["completed", "pending", "failed"]).default("completed"),
 }).omit({
@@ -275,13 +275,13 @@ const allowedUnits = [
 ] as const;
 
 export const insertInventorySchema = createInsertSchema(inventory, {
-  name: z.string().trim().min(1, "name required"),
-  quantity: z.number().int().nonnegative(),
+  name: z.string().trim().min(1, "Название обязательно для заполнения"),
+  quantity: z.number().int().nonnegative("Количество не может быть отрицательным"),
   unit: z.enum(allowedUnits),
   category: z.string().trim().optional().default("general"),
-  minQuantity: z.number().int().nonnegative().optional().default(0),
+  minQuantity: z.number().int().nonnegative("Значение не может быть меньше нуля").optional().default(0),
   branchId: z.string().trim().optional().nullable(),
-  costPrice: z.string().regex(/^\d+(?:\.\d{1,2})?$/, "invalid cost price").optional().default("0"),
+  costPrice: z.string().regex(/^\d+(?:\.\d{1,2})?$/, "Неверный формат себестоимости").optional().default("0"),
 }).omit({
   id: true,
   createdAt: true,
@@ -289,7 +289,7 @@ export const insertInventorySchema = createInsertSchema(inventory, {
 });
 
 export const insertExpenseSchema = createInsertSchema(expenses, {
-  amount: z.string().regex(/^\d+(?:\.\d{1,2})?$/, "invalid amount"),
+  amount: z.string().regex(/^\d+(?:\.\d{1,2})?$/, "Неверный формат суммы"),
   category: z.enum(["rent", "taxes", "marketing", "utilities", "other"]),
   date: z.coerce.date(),
   description: z.string().trim().optional().nullable(),
@@ -301,8 +301,8 @@ export const insertExpenseSchema = createInsertSchema(expenses, {
 
 // Login schema
 export const loginSchema = z.object({
-  email: z.string().min(1, "Email or phone is required"),
-  password: z.string().min(1, "Password is required"),
+  email: z.string().min(1, "Email или телефон обязательны для заполнения"),
+  password: z.string().min(1, "Пароль обязателен для заполнения"),
 });
 
 // Types
