@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { createDb, type DbClient } from "./db";
 import type { IStorage } from "./storage";
 import {
@@ -28,8 +28,27 @@ export class DBStorage implements IStorage {
   }
 
   async seed() {
-    const existing = await this.db.select().from(users).where(eq(users.email, "admin@salon.ru")).limit(1);
-    if (existing.length === 0) {
+    // 1. Создаем Drizzle-овский tenant
+    let demoTenantId: string;
+    const existingTenants = await this.db.select().from(tenants).where(eq(tenants.name, "Демо Салон")).limit(1);
+    if (existingTenants.length === 0) {
+      const [insertedTenant] = await this.db.insert(tenants).values({
+        name: "Демо Салон",
+        businessType: "salon",
+      }).returning();
+      demoTenantId = insertedTenant.id;
+    } else {
+      demoTenantId = existingTenants[0].id;
+    }
+
+    // 2. Обновляем юзеров без tenantId
+    await this.db.update(users)
+      .set({ tenantId: demoTenantId })
+      .where(and(eq(users.role, "admin"), isNull(users.tenantId)));
+
+    // 3. Создаем базового юзера если его нет 
+    const existingUser = await this.db.select().from(users).where(eq(users.email, "admin@salon.ru")).limit(1);
+    if (existingUser.length === 0) {
       const hashedPassword = bcrypt.hashSync("admin123", 10);
       await this.db.insert(users).values({
         email: "admin@salon.ru",
@@ -37,6 +56,7 @@ export class DBStorage implements IStorage {
         password: hashedPassword,
         name: "Анна Петрова",
         role: "admin",
+        tenantId: demoTenantId,
       });
     }
   }
