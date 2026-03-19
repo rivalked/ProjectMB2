@@ -19,8 +19,13 @@ class EmployeesController {
 
   create = async (req: Request | any, res: Response) => {
     try {
-      const data = insertEmployeeSchema.parse(req.body);
-      const employee = await employeesService.createEmployee(req.user.tenantId, data);
+      if (!req.user || !req.user.tenantId) {
+        return res.status(403).json({ message: "У вас нет привязки к бизнесу (tenantId) для создания этой записи" });
+      }
+      const tenantId = req.user.tenantId;
+      const parsedData = insertEmployeeSchema.parse(req.body);
+      const data = { ...parsedData, tenantId };
+      const employee = await employeesService.createEmployee(tenantId, data as any);
       res.status(201).json(employee);
     } catch (error) {
       return respondZodError(res, error);

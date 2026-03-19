@@ -21,10 +21,12 @@ class InventoryController {
   create = async (req: Request | any, res: Response) => {
     try {
       if (!req.user || !req.user.tenantId) {
-        return res.status(403).json({ message: "У вас нет доступа к добавлению материалов (отсутствует tenantId)" });
+        return res.status(403).json({ message: "У вас нет привязки к бизнесу (tenantId) для создания этой записи" });
       }
-      const data = insertInventorySchema.parse(req.body);
-      const item = await inventoryService.createInventoryItem(req.user.tenantId, data);
+      const tenantId = req.user.tenantId;
+      const parsedData = insertInventorySchema.parse(req.body);
+      const data = { ...parsedData, tenantId };
+      const item = await inventoryService.createInventoryItem(tenantId, data as any);
       res.status(201).json(item);
     } catch (error) {
       console.error("POST /api/inventory error:", error);

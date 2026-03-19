@@ -20,11 +20,21 @@ class ClientsController {
 
   create = async (req: Request | any, res: Response) => {
     try {
-      const data = insertClientSchema.parse(req.body);
-      const client = await clientsService.createClient(req.user.tenantId, data);
+      if (!req.user || !req.user.tenantId) {
+        return res.status(403).json({ message: "У вас нет привязки к бизнесу (tenantId) для создания этой записи" });
+      }
+      const tenantId = req.user.tenantId;
+      const parsedData = insertClientSchema.parse(req.body);
+      const data = { ...parsedData, tenantId };
+      const client = await clientsService.createClient(tenantId, data as any);
       res.status(201).json(client);
-    } catch (error) {
-      return respondZodError(res, error);
+    } catch (error: any) {
+      console.error("[CLIENT CREATION ERROR]:", error);
+      return res.status(400).json({ 
+        message: "Ошибка создания", 
+        details: error instanceof Error ? error.message : error,
+        zodErrors: error.errors || null 
+      });
     }
   };
 

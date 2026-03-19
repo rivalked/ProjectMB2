@@ -18,11 +18,13 @@ import systemRoutes from "./routes/system.routes";
 export function respondZodError(res: any, error: unknown) {
   if (error instanceof ZodError) {
     return res.status(400).json({
-      message: "Invalid request data",
-      errors: error.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
+      errors: error.errors.map((i) => ({ path: i.path.join("."), message: i.message })),
     });
   }
-  return res.status(400).json({ message: "Invalid request data" });
+  // Настоящая причина ошибки (например, ошибка базы данных от Neon)
+  return res.status(500).json({ 
+    message: error instanceof Error ? error.message : "Внутренняя ошибка сервера" 
+  });
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {

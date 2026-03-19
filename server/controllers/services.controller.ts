@@ -19,8 +19,13 @@ class ServicesController {
 
   create = async (req: Request | any, res: Response) => {
     try {
-      const data = insertServiceSchema.parse(req.body);
-      const service = await servicesService.createService(req.user.tenantId, data);
+      if (!req.user || !req.user.tenantId) {
+        return res.status(403).json({ message: "У вас нет привязки к бизнесу (tenantId) для создания этой записи" });
+      }
+      const tenantId = req.user.tenantId;
+      const parsedData = insertServiceSchema.parse(req.body);
+      const data = { ...parsedData, tenantId };
+      const service = await servicesService.createService(tenantId, data as any);
       res.status(201).json(service);
     } catch (error) {
       return respondZodError(res, error);

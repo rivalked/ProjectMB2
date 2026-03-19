@@ -63,22 +63,18 @@ export default function Clients() {
       });
     },
     onError: (error: any) => {
-      // Try to map Zod field errors to the form when possible
-      const msg = String(error?.message || "");
-      const parts = msg.split("; ");
-      const fieldErrors = parts
-        .map((p) => p.split(": "))
-        .filter((arr) => arr.length === 2) as [string, string][];
-      fieldErrors.forEach(([path, message]) => {
-        const name = path as keyof InsertClient;
-        if (name && form.getFieldState(name)) {
-          form.setError(name as any, { message });
-        }
-      });
+      if (error.errors && Array.isArray(error.errors)) {
+        error.errors.forEach((err: any) => {
+          const name = err.path as keyof InsertClient;
+          if (name && form.getFieldState(name)) {
+            form.setError(name, { message: err.message });
+          }
+        });
+      }
       toast({
         variant: "destructive",
-        title: "Ошибка",
-        description: error.message || "Не удалось добавить клиента",
+        title: "Ошибка валидации",
+        description: error.message || "Не удалось добавить клиента. Проверьте правильность введенных данных.",
       });
     },
   });

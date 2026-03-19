@@ -171,10 +171,13 @@ export async function authenticatedApiRequest(
 
   if (!res.ok) {
     let message = res.statusText;
+    let errors: any[] | undefined;
+
     try {
       const body = await res.json();
       if (body?.errors?.length) {
-        message = body.errors.map((e: any) => `${e.path}: ${e.message}`).join("; ");
+        errors = body.errors;
+        message = body.errors.map((e: any) => e.message).join("\n");
       } else if (body?.message) {
         message = body.message;
       }
@@ -182,7 +185,11 @@ export async function authenticatedApiRequest(
       const text = (await res.text()) || res.statusText;
       message = text;
     }
-    throw new Error(`${res.status}: ${message}`);
+    
+    const err = new Error(message) as any;
+    err.status = res.status;
+    err.errors = errors;
+    throw err;
   }
 
   return res;
